@@ -2,7 +2,7 @@ require "action_mailer"
 require "active_support"
 require "curb"
 
-module Mailgun
+module Pato
 
   class DeliveryError < StandardError
   end
@@ -24,6 +24,7 @@ module Mailgun
     end
 
     def deliver!(mail)
+      Rails.logger.info "I am deliver"
       body              = Curl::PostField.content("message", mail.encoded)
       body.remote_file  = "message"
       body.content_type = "application/octet-stream"
@@ -35,26 +36,26 @@ module Mailgun
         data << Curl::PostField.content("to", destination)
       end
 
-      curl = Curl::Easy.new("https://api:#{self.api_key}@api.mailgun.net/v2/#{self.api_host}/messages.mime")
-      if ENV['http_proxy']
-        curl.proxy_url = ENV['http_proxy']
-      end
-      curl.ssl_verify_peer = false
-      curl.multipart_form_post = true
-      curl.http_post(*data)
+      # curl = Curl::Easy.new("https://api:#{self.api_key}@api.mailgun.net/v2/#{self.api_host}/messages.mime")
+      # if ENV['http_proxy']
+      #   curl.proxy_url = ENV['http_proxy']
+      # end
+      # curl.ssl_verify_peer = false
+      # curl.multipart_form_post = true
+      # curl.http_post(*data)
 
-      if curl.response_code != 200
-        begin
-          error = ActiveSupport::JSON.decode(curl.body_str)["message"]
-        rescue
-          error = "Unknown Mailgun Error"
-        end
+      # if curl.response_code != 200
+      #   begin
+      #     error = ActiveSupport::JSON.decode(curl.body_str)["message"]
+      #   rescue
+      #     error = "Unknown Mailgun Error"
+      #   end
 
-        raise Mailgun::DeliveryError.new(error)
-      end
+      #   raise Pato::DeliveryError.new(error)
+      # end
     end
 
-  end # Mailgun::DeliveryMethod
-end # Mailgun
+  end
+end
 
-ActionMailer::Base.add_delivery_method :mailgun, Mailgun::DeliveryMethod
+ActionMailer::Base.add_delivery_method :pato, Pato::DeliveryMethod
